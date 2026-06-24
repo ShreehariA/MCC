@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carbon League — Sustainability Dashboard</title>
+<style>
+  :root{
+    --navy:#1E4478; --ink:#33403A; --sub:#5B6B63;
+    --green:#2D6A4F; --green-t:#EAF4EE;
+    --gold:#9C6B0B; --gold-t:#FBF1DC;
+    --blue:#1C5D78; --blue-t:#E7F1F5;
+    --line:#E4E7E5; --bg:#F7F9F8; --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Calibri,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink);padding:22px 26px;}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px;flex-wrap:wrap;gap:10px;}
+  h1{color:var(--navy);font-size:27px;font-weight:700;letter-spacing:.2px;}
+  .sub{color:var(--sub);font-style:italic;font-size:14px;margin-top:2px;}
+  .period{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--sub);}
+  .period b{color:var(--navy);font-style:normal;}
+  .grid{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-top:16px;}
+  .card{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:0 2px 6px rgba(0,0,0,.04);}
+  .card h2{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--navy);margin-bottom:14px;font-weight:700;}
+
+  /* league table */
+  .row{display:grid;grid-template-columns:26px 1fr 70px 84px;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:.15s;}
+  .row:last-child{border-bottom:none;}
+  .row:hover{background:var(--green-t);border-radius:8px;padding-left:8px;}
+  .row.active{background:var(--green-t);border-radius:8px;padding-left:8px;}
+  .rank{font-weight:700;color:var(--navy);font-size:16px;text-align:center;}
+  .dept{font-weight:600;font-size:14.5px;}
+  .dept small{display:block;color:var(--sub);font-weight:400;font-size:11.5px;}
+  .barwrap{background:var(--line);border-radius:20px;height:9px;overflow:hidden;width:100%;}
+  .bar{height:100%;border-radius:20px;}
+  .score{text-align:right;font-weight:700;font-size:15px;color:var(--green);}
+  .mv{font-size:11px;text-align:right;}
+  .up{color:var(--green);} .dn{color:#B23A2E;} .fl{color:var(--sub);}
+
+  /* headline */
+  .hl{display:flex;flex-direction:column;gap:14px;}
+  .stat{background:var(--green-t);border-radius:10px;padding:16px;text-align:center;}
+  .stat .n{font-size:34px;font-weight:700;color:var(--green);line-height:1;}
+  .stat .l{font-size:12px;color:var(--sub);margin-top:5px;}
+  .stat.b{background:var(--blue-t);} .stat.b .n{color:var(--blue);}
+  .stat.g{background:var(--gold-t);} .stat.g .n{color:var(--gold);}
+  .twin{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  /* metric breakdown */
+  .metrics{margin-top:16px;}
+  .mname{font-size:13.5px;font-weight:600;margin-bottom:8px;color:var(--navy);}
+  .mbar{display:grid;grid-template-columns:150px 1fr 40px;align-items:center;gap:10px;margin-bottom:10px;}
+  .mbar .lab{font-size:12.5px;color:var(--ink);}
+  .mtrack{background:var(--line);border-radius:20px;height:13px;overflow:hidden;}
+  .mfill{height:100%;border-radius:20px;background:var(--green);}
+  .mval{font-size:12px;font-weight:700;color:var(--green);text-align:right;}
+
+  /* investment allocation */
+  .alloc{margin-top:16px;}
+  .alloc .note{font-size:12px;color:var(--sub);margin-bottom:14px;}
+  .allocbar{display:flex;height:42px;border-radius:8px;overflow:hidden;margin-bottom:12px;border:1px solid var(--line);}
+  .seg{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;transition:.2s;}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;}
+  .lg{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+  .dot{width:11px;height:11px;border-radius:3px;flex:none;}
+  .lg .pct{margin-left:auto;font-weight:700;color:var(--navy);}
+  .pool{background:var(--navy);color:#fff;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+  .pool .t{font-size:12.5px;opacity:.85;}
+  .pool .v{font-size:20px;font-weight:700;}
+
+  .reward{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+  .tier{border:1px solid var(--line);border-radius:9px;padding:11px;text-align:center;}
+  .tier .ic{font-size:20px;}
+  .tier .tn{font-size:13px;font-weight:700;margin-top:3px;}
+  .tier .td{font-size:11px;color:var(--sub);}
+  .tier.on{border-color:var(--green);background:var(--green-t);}
+
+  .foot{margin-top:16px;font-size:11px;color:var(--sub);text-align:center;}
+  .span2{grid-column:1/3;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}.span2{grid-column:auto;}}
+</style>
+</head>
+<body>
+  <div class="head">
+    <div>
+      <h1>Carbon League — Department Sustainability Dashboard</h1>
+      <div class="sub">Performance scored against each department's own baseline · drives the Green Dividend &amp; future investment allocation</div>
+    </div>
+    <div class="period">Reporting period: <b>Q3 2030</b> · Building: Data, Health &amp; Society</div>
+  </div>
+
+  <div class="grid">
+    <!-- LEAGUE TABLE -->
+    <div class="card">
+      <h2>Quarterly League — ranked by improvement</h2>
+      <div id="league"></div>
+      <div class="foot">Click a department to see its metric breakdown →</div>
+    </div>
+
+    <!-- HEADLINE STATS -->
+    <div class="card">
+      <h2>This quarter at a glance</h2>
+      <div class="hl">
+        <div class="stat"><div class="n">−38&nbsp;tCO₂e</div><div class="l">Building carbon saved vs baseline</div></div>
+        <div class="twin">
+          <div class="stat b"><div class="n">−21%</div><div class="l">Paper use</div></div>
+          <div class="stat g"><div class="n">+27</div><div class="l">Cross-dept events</div></div>
+        </div>
+        <div class="stat b"><div class="n">£18,400</div><div class="l">Green Dividend pool earned (reinvested)</div></div>
+      </div>
+    </div>
+
+    <!-- METRIC BREAKDOWN -->
+    <div class="card">
+      <h2>Metric breakdown — <span id="selname" style="color:var(--green)">Computer Science / AI</span></h2>
+      <div class="metrics" id="metrics"></div>
+    </div>
+
+    <!-- INVESTMENT ALLOCATION -->
+    <div class="card">
+      <h2>Future investment allocation</h2>
+      <div class="alloc">
+        <div class="note">Each department's league score sets its share of the reinvested Green Dividend &amp; next sustainability investment round.</div>
+        <div class="allocbar" id="allocbar"></div>
+        <div class="legend" id="legend"></div>
+        <div class="pool">
+          <div class="t">Next investment round allocated by score</div>
+          <div class="v">£120,000</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REWARD TIERS -->
+    <div class="card span2">
+      <h2>Greenhouse Exchange — reward tiers (café discount, by improvement)</h2>
+      <div class="reward">
+        <div class="tier" id="t1"><div class="ic">🌱</div><div class="tn">Seedling · 5%</div><div class="td">0–10% improvement</div></div>
+        <div class="tier" id="t2"><div class="ic">🌿</div><div class="tn">Sapling · 10%</div><div class="td">10–20% improvement</div></div>
+        <div class="tier" id="t3"><div class="ic">🌳</div><div class="tn">Bloom · 15%</div><div class="td">20%+ improvement</div></div>
+      </div>
+      <div class="foot">Tiers update automatically from the league score · displayed in-building each quarter</div>
+    </div>
+  </div>
+
+<script>
+// ---- DATA: five fixed departments, realistic sample values ----
+// metric sub-scores out of 20 each (improvement vs own baseline) -> total /100
+const depts = [
+  { name:"Computer Science / AI", sub:"Method spine", color:"#2D6A4F",
+    m:{paper:18, elec:15, waste:17, share:19, plant:14}, move:"up" },
+  { name:"Applied Health & Public Health", sub:"Application", color:"#1C5D78",
+    m:{paper:16, elec:13, waste:16, share:18, plant:15}, move:"up" },
+  { name:"Psychology", sub:"Behaviour", color:"#9C6B0B",
+    m:{paper:17, elec:16, waste:15, share:14, plant:16}, move:"down" },
+  { name:"Law", sub:"Regulation", color:"#5B6B63",
+    m:{paper:19, elec:14, waste:14, share:13, plant:13}, move:"flat" },
+  { name:"Philosophy & Theology", sub:"Ethics", color:"#7A5C8E",
+    m:{paper:15, elec:15, waste:13, share:15, plant:14}, move:"up" },
+];
+const METRICS = [
+  ["paper","Paper &amp; printing"],
+  ["elec","Electricity / out-of-hours"],
+  ["waste","Waste sorting"],
+  ["share","Knowledge sharing (events)"],
+  ["plant","Plants &amp; maintenance"],
+];
+depts.forEach(d=> d.total = d.m.paper+d.m.elec+d.m.waste+d.m.share+d.m.plant);
+depts.sort((a,b)=> b.total-a.total);
+
+// allocation = score share of total
+const grand = depts.reduce((s,d)=>s+d.total,0);
+depts.forEach(d=> d.share = Math.round(d.total/grand*1000)/10);
+
+const moveTxt = {up:"▲ up", down:"▼ down", flat:"▬ hold"};
+const moveCls = {up:"up", down:"dn", flat:"fl"};
+
+// ---- RENDER LEAGUE ----
+const league = document.getElementById('league');
+depts.forEach((d,i)=>{
+  const r = document.createElement('div');
+  r.className = 'row' + (i===0?' active':'');
+  r.innerHTML = `
+    <div class="rank">${i+1}</div>
+    <div>
+      <div class="dept">${d.name}<small>${d.sub}</small></div>
+      <div class="barwrap" style="margin-top:6px"><div class="bar" style="width:${d.total}%;background:${d.color}"></div></div>
+    </div>
+    <div class="score">${d.total}<div class="mv ${moveCls[d.move]}">${moveTxt[d.move]}</div></div>
+    <div style="text-align:right;font-size:12px;color:var(--sub)">share<br><b style="color:var(--navy);font-size:14px">${d.share}%</b></div>`;
+  r.onclick = ()=>{ select(i); document.querySelectorAll('.row').forEach(x=>x.classList.remove('active')); r.classList.add('active'); };
+  league.appendChild(r);
+});
+
+// ---- METRIC BREAKDOWN ----
+function select(i){
+  const d = depts[i];
+  document.getElementById('selname').innerHTML = d.name;
+  const box = document.getElementById('metrics');
+  box.innerHTML = '';
+  METRICS.forEach(([k,label])=>{
+    const v = d.m[k];
+    const el = document.createElement('div');
+    el.className='mbar';
+    el.innerHTML = `<div class="lab">${label}</div>
+      <div class="mtrack"><div class="mfill" style="width:${v/20*100}%;background:${d.color}"></div></div>
+      <div class="mval" style="color:${d.color}">${v}/20</div>`;
+    box.appendChild(el);
+  });
+  // reward tier based on total improvement proxy
+  const pct = d.total; // 0-100
+  ['t1','t2','t3'].forEach(t=>document.getElementById(t).classList.remove('on'));
+  if(pct>=80) document.getElementById('t3').classList.add('on');
+  else if(pct>=70) document.getElementById('t2').classList.add('on');
+  else document.getElementById('t1').classList.add('on');
+}
+
+// ---- ALLOCATION BAR ----
+const ab = document.getElementById('allocbar');
+const lg = document.getElementById('legend');
+depts.forEach(d=>{
+  const seg = document.createElement('div');
+  seg.className='seg';
+  seg.style.width = d.share+'%';
+  seg.style.background = d.color;
+  seg.textContent = d.share+'%';
+  seg.title = d.name+': '+d.share+'%';
+  ab.appendChild(seg);
+  const l = document.createElement('div');
+  l.className='lg';
+  l.innerHTML = `<span class="dot" style="background:${d.color}"></span>${d.name}<span class="pct">£${Math.round(120000*d.share/100/100)*100}</span>`;
+  lg.appendChild(l);
+});
+
+select(0);
+</script>
+</body>
+</html>
